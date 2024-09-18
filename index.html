@@ -1,0 +1,207 @@
+<html><head><base href="https://example.com/global-time-calculator/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>リアルタイム世界時計と時差検索</title>
+<style>
+  body {
+    font-family: 'Roboto', 'Arial', sans-serif;
+    background: linear-gradient(135deg, #34495e, #2c3e50);
+    color: #ecf0f1;
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .container {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    width: 90%;
+    max-width: 800px;
+  }
+  h1, h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 32px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #3498db;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  }
+  h2 {
+    font-size: 24px;
+    margin-top: 40px;
+  }
+  .clock-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+  }
+  .clock {
+    text-align: center;
+    margin: 20px;
+    padding: 15px;
+    background: rgba(52, 152, 219, 0.2);
+    border-radius: 12px;
+    min-width: 200px;
+  }
+  .country-name {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #f1c40f;
+  }
+  .time {
+    font-size: 28px;
+    font-weight: bold;
+    color: #ecf0f1;
+  }
+  .date {
+    font-size: 16px;
+    color: #bdc3c7;
+    margin-top: 5px;
+  }
+  .flag-icon {
+    width: 30px;
+    height: 20px;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+  .search-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  #countrySearch {
+    padding: 10px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px 0 0 5px;
+    width: 60%;
+    max-width: 300px;
+  }
+  #searchBtn {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 0 5px 5px 0;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  #searchBtn:hover {
+    background-color: #2980b9;
+  }
+  #searchResult {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 18px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>リアルタイム世界時計</h1>
+  <div class="clock-container" id="clockContainer"></div>
+  
+  <h2>時差検索</h2>
+  <div class="search-container">
+    <input type="text" id="countrySearch" placeholder="国名を入力">
+    <button id="searchBtn">検索</button>
+  </div>
+  <div id="searchResult"></div>
+</div>
+
+<script>
+const countries = [
+  { code: 'GB', name: 'イギリス（ロンドン）', timezone: 'Europe/London', flag: '🇬🇧' },
+  { code: 'JP', name: '日本', timezone: 'Asia/Tokyo', flag: '🇯🇵' },
+  { code: 'SG', name: 'シンガポール', timezone: 'Asia/Singapore', flag: '🇸🇬' },
+  { code: 'NZ', name: 'ニュージーランド', timezone: 'Pacific/Auckland', flag: '🇳🇿' },
+  { code: 'AU', name: 'オーストラリア（シドニー）', timezone: 'Australia/Sydney', flag: '🇦🇺' },
+  { code: 'FI', name: 'フィンランド', timezone: 'Europe/Helsinki', flag: '🇫🇮' },
+  { code: 'PK', name: 'パキスタン', timezone: 'Asia/Karachi', flag: '🇵🇰' }
+];
+
+function createClockElement(country) {
+  const clockDiv = document.createElement('div');
+  clockDiv.className = 'clock';
+  clockDiv.innerHTML = `
+    <div class="country-name">${country.flag} ${country.name}</div>
+    <div class="time" id="time-${country.code}"></div>
+    <div class="date" id="date-${country.code}"></div>
+  `;
+  return clockDiv;
+}
+
+function updateTime() {
+  countries.forEach(country => {
+    const options = {
+      timeZone: country.timezone,
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    };
+    const dateOptions = {
+      timeZone: country.timezone,
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    };
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('ja-JP', options);
+    const dateString = now.toLocaleDateString('ja-JP', dateOptions);
+    
+    document.getElementById(`time-${country.code}`).textContent = timeString;
+    document.getElementById(`date-${country.code}`).textContent = dateString;
+  });
+}
+
+function initClocks() {
+  const container = document.getElementById('clockContainer');
+  countries.forEach(country => {
+    container.appendChild(createClockElement(country));
+  });
+  updateTime();
+  setInterval(updateTime, 1000);
+}
+
+function searchCountry() {
+  const searchInput = document.getElementById('countrySearch').value.toLowerCase();
+  const resultDiv = document.getElementById('searchResult');
+  
+  const country = countries.find(c => c.name.toLowerCase().includes(searchInput));
+  
+  if (country) {
+    const now = new Date();
+    const options = {
+      timeZone: country.timezone,
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    };
+    const timeString = now.toLocaleTimeString('ja-JP', options);
+    resultDiv.innerHTML = `${country.flag} ${country.name}の現在時刻: ${timeString}`;
+  } else {
+    resultDiv.innerHTML = '国が見つかりません。別の国名を試してください。';
+  }
+}
+
+document.getElementById('searchBtn').addEventListener('click', searchCountry);
+document.getElementById('countrySearch').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    searchCountry();
+  }
+});
+
+initClocks();
+</script>
+</body></html>
